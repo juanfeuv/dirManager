@@ -21,3 +21,14 @@ export const createFile = ({ path }) => new Promise((resolve, reject) => Meteor
 
         resolve(res);
     }));
+
+export const removeFile = ({ path }) => new Promise((resolve, reject) => Meteor
+    .call('removeFile', { path }, (err, res) => {
+        if (err) {
+            reject(err);
+
+            return;
+        }
+
+        resolve(res);
+    }));

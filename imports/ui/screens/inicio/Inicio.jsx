@@ -1,12 +1,15 @@
+import { BsTrash, BsPencil } from "react-icons/bs";
 import React, { useState, useEffect } from 'react';
 
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button'
+import Col from 'react-bootstrap/Col';
+import Container from 'react-bootstrap/Container';
+import Form from 'react-bootstrap/Form';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Row from 'react-bootstrap/Row';
+import Tooltip from 'react-bootstrap/Tooltip';
 
-import { readFiles, createFile } from './inicioHelper';
+import { readFiles, createFile, removeFile } from './inicioHelper';
 
 
 
@@ -34,6 +37,15 @@ const Inicio = () => {
       getFilesFromBe();
 
       setFileName('');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const removeFileInBe = async ({ path }) => {
+    try {
+      await removeFile({ path });
+      getFilesFromBe();
     } catch (error) {
       console.error(error);
     }
@@ -81,7 +93,30 @@ const Inicio = () => {
                 .map((file) => (
                   <Col xs={12} md={4} key={file}>
                     <ul>
-                      <li>{file}</li>
+                      <li>
+                        {file}
+                        {' '}
+                        <OverlayTrigger
+                          overlay={<Tooltip id="tooltip-disabled">Editar Archivo</Tooltip>}
+                          placement="right"
+                        >
+                          <Button variant="light" size="sm">
+                            <BsPencil />
+                          </Button>
+                        </OverlayTrigger>
+                        {' '}
+                        <OverlayTrigger
+                          overlay={<Tooltip id="tooltip-disabled">Eliminar Archivo</Tooltip>}
+                          placement="right"
+                        >
+                          <Button
+                            variant="light" size="sm"
+                            onClick={() => removeFileInBe({ path: file })}
+                          >
+                            <BsTrash />
+                          </Button>
+                        </OverlayTrigger>
+                      </li>
                     </ul>
                   </Col>
                 ))
