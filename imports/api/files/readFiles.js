@@ -1,5 +1,5 @@
 import { Meteor } from 'meteor/meteor';
-import { readdir } from 'fs';
+import { readdirSync } from 'fs';
 
 import { PWD } from '../utils';
 
@@ -7,20 +7,16 @@ const rootPath = Meteor.isDevelopment
     ? `${PWD}tmp`
     : `/tmp/`;
 
-const awaitReadFiles = (path) => new Promise((resolve, reject) => readdir(`${rootPath}${path}`, (err, files) => {
-    if (err) {
-        reject(err);
+const readDataDirectories = (path) => readdirSync(`${rootPath}${path}`, { withFileTypes: true });
 
-        return;
-    }
+const readFiles = ({ path }) => {
+    const data = readDataDirectories(path)
+        .map(file => ({
+            name: file.name,
+            isDirectory: file.isDirectory(),
+        }));
 
-    resolve(files);
-}));
-
-const readFiles = async ({ path }) => {
-    const files = await awaitReadFiles(path);
-
-    return files;
+    return data;
 };
 
 Meteor.methods({ readFiles });

@@ -32,3 +32,14 @@ export const removeFile = ({ path }) => new Promise((resolve, reject) => Meteor
 
         resolve(res);
     }));
+
+export const createDirectory = ({ path }) => new Promise((resolve, reject) => Meteor
+    .call('createDirectory', { path }, (err, res) => {
+        if (err) {
+            reject(err);
+
+            return;
+        }
+
+        resolve(res);
+    }));

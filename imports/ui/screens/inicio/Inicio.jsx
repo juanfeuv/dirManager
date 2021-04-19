@@ -1,7 +1,11 @@
-import { BsTrash, BsPencil } from "react-icons/bs";
+import {
+  BsTrash, BsPencil, BsFileEarmark, BsFolder,
+} from "react-icons/bs";
 import React, { useState, useEffect } from 'react';
 
+import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import Button from 'react-bootstrap/Button'
+import Card from 'react-bootstrap/Card';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
@@ -9,13 +13,16 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Row from 'react-bootstrap/Row';
 import Tooltip from 'react-bootstrap/Tooltip';
 
-import { readFiles, createFile, removeFile } from './inicioHelper';
+import { readFiles, createFile, removeFile, createDirectory } from './inicioHelper';
 
-
-
-const Inicio = () => {
-  const [files, setFiles] = useState([]);
+const Inicio = ({ location }) => {
+  const [directoryItems, setDirectoryItems] = useState([]);
   const [fileName, setFileName] = useState('');
+  const [formType, setFormType] = useState('archivo');
+
+  const changeFormType = (event) => {
+    setFormType(event.target.value);
+  };
 
   const readFilesFromBe = async ({ path }) => {
     try {
@@ -29,11 +36,16 @@ const Inicio = () => {
     }
   };
 
-  const createFileInBe = async (event) => {
+  const createItemInBe = async (event) => {
     event.preventDefault();
 
     try {
-      await createFile({ path: fileName });
+      if (formType === 'archivo') {
+        await createFile({ path: `${location.pathname}/${fileName}` });
+      } else {
+        await createDirectory({ path: `${location.pathname}/${fileName}` });
+      }
+
       getFilesFromBe();
 
       setFileName('');
@@ -52,9 +64,23 @@ const Inicio = () => {
   };
 
   const getFilesFromBe = async () => {
-    const beFiles = await readFilesFromBe({ path: '' });
+    const beFiles = await readFilesFromBe({ path: location.pathname });
 
-    setFiles(beFiles);
+    setDirectoryItems(beFiles);
+  };
+
+  const getAllPaths = () => {
+    const routes = location.pathname
+      .split('/');
+
+
+    return routes
+      .map((route, key) => ({
+        name: route,
+        path: routes
+          .slice(0, key)
+          .join('/'),
+      }));
   };
 
   useEffect(() => {
@@ -71,7 +97,7 @@ const Inicio = () => {
         </Row>
         <Row>
           <Col xs={12} md={6}>
-            <Form onSubmit={createFileInBe}>
+            <Form onSubmit={createItemInBe}>
               <Form.Group>
                 <Form.Label>Nombre del archivo</Form.Label>
                 <Form.Control
@@ -80,6 +106,26 @@ const Inicio = () => {
                   value={fileName}
                   onChange={e => setFileName(e.target.value)}
                 />
+                <Form.Check
+                  inline
+                  name="type"
+                  type="radio"
+                  id="archivo"
+                  label="Archivo"
+                  onChange={changeFormType}
+                  value="archivo"
+                  checked={formType === 'archivo'}
+                />
+                <Form.Check
+                  inline
+                  name="type"
+                  type="radio"
+                  id="carpeta"
+                  label="Carpeta"
+                  onChange={changeFormType}
+                  value="carpeta"
+                  checked={formType === 'carpeta'}
+                />
                 <br />
                 <Button type="submit" variant="dark">Crear archivo</Button>
               </Form.Group>
@@ -87,42 +133,87 @@ const Inicio = () => {
           </Col>
         </Row>
         <Row>
+          <Col xs={12}>
+            <Breadcrumb>
+              {
+                getAllPaths()
+                  .map((route, key) => (
+                    <Breadcrumb.Item href={route.path} key={`${route.name}-${key}`}>
+                      {route.name}
+                    </Breadcrumb.Item>
+                  ))
+              }
+            </Breadcrumb>
+          </Col>
+        </Row>
+        <Row>
           {
-            files && files.length
-              ? files
+            directoryItems && directoryItems.length
+              ? directoryItems
                 .map((file) => (
-                  <Col xs={12} md={4} key={file}>
-                    <ul>
-                      <li>
-                        {file}
-                        {' '}
-                        <OverlayTrigger
-                          overlay={<Tooltip id="tooltip-disabled">Editar Archivo</Tooltip>}
-                          placement="right"
-                        >
-                          <Button variant="light" size="sm">
-                            <BsPencil />
-                          </Button>
-                        </OverlayTrigger>
-                        {' '}
-                        <OverlayTrigger
-                          overlay={<Tooltip id="tooltip-disabled">Eliminar Archivo</Tooltip>}
-                          placement="right"
-                        >
-                          <Button
-                            variant="light" size="sm"
-                            onClick={() => removeFileInBe({ path: file })}
-                          >
-                            <BsTrash />
-                          </Button>
-                        </OverlayTrigger>
-                      </li>
-                    </ul>
+                  <Col xs={12} sm={6} md={3} key={file.name} className="p-2">
+                    <Card style={{ width: '18rem' }}>
+                      {
+                        file.isDirectory
+                          ? (
+                            <Card.Body>
+                              <Card.Title><BsFolder /> {file.name}</Card.Title>
+                              <OverlayTrigger
+                                overlay={<Tooltip id="tooltip-disabled">Cambiar Nombre</Tooltip>}
+                                placement="right"
+                              >
+                                <Button variant="light" size="sm">
+                                  <BsPencil />
+                                </Button>
+                              </OverlayTrigger>
+                              {' '}
+                              <OverlayTrigger
+                                overlay={<Tooltip id="tooltip-disabled">Eliminar Carpeta</Tooltip>}
+                                placement="right"
+                              >
+                                <Button
+                                  variant="light" size="sm"
+                                  onClick={() => removeFileInBe({ path: `${location.pathname}${file.name}` })}
+                                >
+                                  <BsTrash />
+                                </Button>
+                              </OverlayTrigger>
+                            </Card.Body>
+                          )
+                          : (
+                            <>
+                              <Card.Body>
+                                <Card.Title><BsFileEarmark /> {file.name}</Card.Title>
+                                <OverlayTrigger
+                                  overlay={<Tooltip id="tooltip-disabled">Cambiar Nombre</Tooltip>}
+                                  placement="right"
+                                >
+                                  <Button variant="light" size="sm">
+                                    <BsPencil />
+                                  </Button>
+                                </OverlayTrigger>
+                                {' '}
+                                <OverlayTrigger
+                                  overlay={<Tooltip id="tooltip-disabled">Eliminar Archivo</Tooltip>}
+                                  placement="right"
+                                >
+                                  <Button
+                                    variant="light" size="sm"
+                                    onClick={() => removeFileInBe({ path: `${location.pathname}${file.name}` })}
+                                  >
+                                    <BsTrash />
+                                  </Button>
+                                </OverlayTrigger>
+                              </Card.Body>
+                            </>
+                          )
+                      }
+                    </Card>
                   </Col>
                 ))
               : (
                 <Col xs={12}>
-                  <span style={{ textAlign: 'center' }}>No se encontraron archivos</span>
+                  <span style={{ textAlign: 'center' }}>No se encontraron archivos/carpetas</span>
                 </Col>
               )
           }

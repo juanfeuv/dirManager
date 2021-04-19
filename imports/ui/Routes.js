@@ -12,8 +12,7 @@ const history = createBrowserHistory();
 const Routes = () => (
     <Router history={history}>
         <Switch>
-            <Route exact path="/" component={Inicio} />
-            <Route path="*" component={NotFound} history={history} />
+            <Route path="*" component={Inicio} />
         </Switch>
     </Router>
 );
