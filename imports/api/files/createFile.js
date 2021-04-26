@@ -19,7 +19,6 @@ const awaitCreateFile = (path) => new Promise((resolve, reject) => appendFile(`$
 }));
 
 const createFile = async ({ path }) => {
-    console.log(path);
     const response = await awaitCreateFile(path);
 
     return response;

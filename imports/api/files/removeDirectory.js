@@ -10,6 +10,8 @@ const removeDir = (path) => {
     if (existsSync(path)) {
         rmdirSync(path, {
             recursive: true,
+            maxRetries: 3,
+            retryDelay: 300
         });
     } else {
         console.log("Directory path not found.")
