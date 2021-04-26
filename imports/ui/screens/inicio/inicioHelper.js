@@ -43,3 +43,26 @@ export const createDirectory = ({ path }) => new Promise((resolve, reject) => Me
 
         resolve(res);
     }));
+
+export const removeDirectory = ({ path }) => new Promise((resolve, reject) => Meteor
+    .call('removeDirectory', { path }, (err, res) => {
+        if (err) {
+            reject(err);
+
+            return;
+        }
+
+        resolve(res);
+    }));
+
+export const renameElement = ({ oldPath, newPath }) => new Promise((resolve, reject) => Meteor
+    .call('renameElement', { oldPath, newPath }, (err, res) => {
+        if (err) {
+            reject(err);
+
+            return;
+        }
+
+        resolve(res);
+    }));
+

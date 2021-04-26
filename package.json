@@ -17,6 +17,7 @@
     "react-dom": "16.13.1",
     "react-icons": "4.2.0",
     "react-router-dom": "5.2.0",
+    "react-toastify": "7.0.4",
     "simpl-schema": "1.12.0"
   },
   "meteor": {
