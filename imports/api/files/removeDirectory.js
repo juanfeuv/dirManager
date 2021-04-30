@@ -1,4 +1,5 @@
-import { existsSync, rmdirSync } from 'fs';
+import { existsSync } from 'fs';
+import { removeSync } from 'fs-extra';
 
 import { PWD } from '../utils';
 
@@ -8,11 +9,7 @@ const rootPath = Meteor.isDevelopment
 
 const removeDir = (path) => {
     if (existsSync(path)) {
-        rmdirSync(path, {
-            recursive: true,
-            maxRetries: 3,
-            retryDelay: 300
-        });
+        removeSync(path);
     } else {
         console.log("Directory path not found.")
     }

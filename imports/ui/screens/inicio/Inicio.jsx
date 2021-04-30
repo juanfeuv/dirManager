@@ -1,20 +1,27 @@
 import {
-  BsTrash, BsPencil, BsFileEarmark, BsFolder, BsArrowsFullscreen
+  BsTrash, BsPencil, BsFileEarmark, BsFolder, BsArrowsFullscreen, BsThreeDotsVertical
 } from "react-icons/bs";
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 
 import Button from 'react-bootstrap/Button'
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Card from 'react-bootstrap/Card';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
+import Dropdown from 'react-bootstrap/Dropdown';
+import DropdownButton from 'react-bootstrap/DropdownButton';
 import Form from 'react-bootstrap/Form';
+import Modal from 'react-bootstrap/Modal';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover'
 import Row from 'react-bootstrap/Row';
 import Tooltip from 'react-bootstrap/Tooltip';
 
-import { readFiles, createFile, removeFile, createDirectory, removeDirectory, renameElement } from './inicioHelper';
+import {
+  readFiles, createFile, removeFile, createDirectory, removeDirectory, renameElement, copyElement as copyElementAny,
+  moveElement as moveElementAny,
+} from './inicioHelper';
 
 import CustomBreadcrumb from './CustomBreadcrumb';
 import ModalConfirmacion from './ModalConfirmacion';
@@ -32,6 +39,8 @@ const Inicio = ({ location }) => {
   const [isFileToRemove, setIsFileToRemove] = useState(false);
   const [fileNameToEdit, setFileNameToEdit] = useState('');
   const [currentOriginalNameToEdit, setCurrentOriginalNameToEdit] = useState('');
+  const [smShow, setSmShow] = useState(false);
+  const [currentPathOp, setCurrentPathOp] = useState('');
 
   const handleClose = () => setShow(false);
   const handleShow = ({ path, isFile }) => {
@@ -145,6 +154,96 @@ const Inicio = ({ location }) => {
     }
   };
 
+  const copyElement = () => {
+    const currentOp = JSON.stringify({
+      type: 'copy',
+      path: currentPathOp,
+    });
+
+    localStorage.setItem('currentOp', currentOp);
+
+    toast.success('Elemento copiado exitosamente', {
+      position: toast.POSITION.BOTTOM_LEFT,
+    });
+
+    setSmShow(false);
+  };
+
+  const moveElement = () => {
+    const currentOp = JSON.stringify({
+      type: 'move',
+      path: currentPathOp,
+    });
+
+    localStorage.setItem('currentOp', currentOp);
+
+    toast.success('Elemento listo para mover', {
+      position: toast.POSITION.BOTTOM_LEFT,
+    });
+
+    setSmShow(false);
+  };
+
+  const setModalOptions = ({ path }) => {
+    setSmShow(true);
+
+    setCurrentPathOp(path);
+  };
+
+  const currentOpType = localStorage.getItem('currentOp') && JSON.parse(localStorage.getItem('currentOp'))
+    ? JSON.parse(localStorage.getItem('currentOp')).type
+    : '';
+
+  const pasteElement = async () => {
+    const { path } = JSON.parse(localStorage.getItem('currentOp'));
+
+    try {
+      await copyElementAny({
+        src: path,
+        dest: validatePath(location.pathname),
+      });
+
+      await getFilesFromBe();
+
+      localStorage.setItem('currentOp', null);
+
+      toast.success('Elemento pegado exitosamente', {
+        position: toast.POSITION.BOTTOM_LEFT,
+      });
+    } catch (error) {
+      console.error(error);
+
+      toast.error('Error pegando elemento', {
+        position: toast.POSITION.BOTTOM_LEFT,
+      });
+    }
+  };
+
+  const moveElementInBe = async () => {
+    const { path } = JSON.parse(localStorage.getItem('currentOp'));
+
+    try {
+      await moveElementAny({
+        src: path,
+        dest: validatePath(location.pathname),
+      });
+
+      await getFilesFromBe();
+
+      localStorage.setItem('currentOp', null);
+
+      toast.success('Elemento movido exitosamente', {
+        position: toast.POSITION.BOTTOM_LEFT,
+      });
+    } catch (error) {
+      console.error(error);
+
+      toast.error('Error moviendo elemento', {
+        position: toast.POSITION.BOTTOM_LEFT,
+      });
+    }
+  };
+
   const popoverEdicion = (
     <Popover id="popover-basic">
       <Popover.Title as="h3">Cambiar nombre</Popover.Title>
@@ -192,6 +291,35 @@ const Inicio = ({ location }) => {
         pathToRemove={pathToRemove}
         isFileToRemove={isFileToRemove}
       />
+      <Modal
+        size="sm"
+        show={smShow}
+        onHide={() => setSmShow(false)}
+        aria-labelledby="example-modal-sizes-title-sm"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title id="example-modal-sizes-title-sm">
+            Más opciones
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ textAlign: 'center' }}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={copyElement}
+          >
+            Copiar
+          </Button>
+          {' '}
+          <Button
+            variant="info"
+            size="sm"
+            onClick={moveElement}
+          >
+            Mover
+          </Button>
+        </Modal.Body>
+      </Modal>
       <Container fluid>
         <Row>
           <Col xs={12}>
@@ -238,6 +366,26 @@ const Inicio = ({ location }) => {
         <Row>
           <Col xs={12}>
             <CustomBreadcrumb />
+          </Col>
+        </Row>
+        <Row>
+          <Col xs={12}>
+            <DropdownButton as={ButtonGroup} title="Opciones" id="bg-nested-dropdown">
+              <Dropdown.Item
+                eventKey="1"
+                disabled={currentOpType !== 'copy'}
+                onClick={pasteElement}
+              >
+                Pegar
+              </Dropdown.Item>
+              <Dropdown.Item
+                eventKey="2"
+                disabled={currentOpType !== 'move'}
+                onClick={moveElementInBe}
+              >
+                Mover aquí
+              </Dropdown.Item>
+            </DropdownButton>
           </Col>
         </Row>
         <Row>
@@ -292,6 +440,21 @@ const Inicio = ({ location }) => {
                                   <BsTrash />
                                 </Button>
                               </OverlayTrigger>
+                              {' '}
+                              <OverlayTrigger
+                                overlay={<Tooltip id="tooltip-disabled">Más opciones</Tooltip>}
+                                placement="right"
+                              >
+                                <Button
+                                  variant="light"
+                                  size="sm"
+                                  onClick={() => setModalOptions({
+                                    path: `${validatePath(location.pathname)}${file.name}`,
+                                  })}
+                                >
+                                  <BsThreeDotsVertical />
+                                </Button>
+                              </OverlayTrigger>
                             </Card.Body>
                           )
                           : (
@@ -323,6 +486,21 @@ const Inicio = ({ location }) => {
                                     })}
                                   >
                                     <BsTrash />
+                                  </Button>
+                                </OverlayTrigger>
+                                {' '}
+                                <OverlayTrigger
+                                  overlay={<Tooltip id="tooltip-disabled">Más opciones</Tooltip>}
+                                  placement="right"
+                                >
+                                  <Button
+                                    variant="light"
+                                    size="sm"
+                                    onClick={() => setModalOptions({
+                                      path: `${validatePath(location.pathname)}${file.name}`,
+                                    })}
+                                  >
+                                    <BsThreeDotsVertical />
                                   </Button>
                                 </OverlayTrigger>
                               </Card.Body>

@@ -66,3 +66,24 @@ export const renameElement = ({ oldPath, newPath }) => new Promise((resolve, rej
         resolve(res);
     }));
 
+export const copyElement = ({ src, dest }) => new Promise((resolve, reject) => Meteor
+    .call('copyElement', { src, dest }, (err, res) => {
+        if (err) {
+            reject(err);
+
+            return;
+        }
+
+        resolve(res);
+    }));
+
+export const moveElement = ({ src, dest }) => new Promise((resolve, reject) => Meteor
+    .call('moveElement', { src, dest }, (err, res) => {
+        if (err) {
+            reject(err);
+
+            return;
+        }
+
+        resolve(res);
+    }));
