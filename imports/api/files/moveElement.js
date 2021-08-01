@@ -1,16 +1,19 @@
 import { Meteor } from 'meteor/meteor';
 import { moveSync } from 'fs-extra';
 
-import { PWD, cleanPathFormat } from '../utils';
+import { PWD, cleanPathFormat, getFileNameFromPath } from '../utils';
 
 const rootPath = Meteor.isDevelopment
     ? `${PWD}tmp`
     : `/tmp/`;
 
 const moveElement = ({ src, dest }) => {
-    console.log(cleanPathFormat(`${rootPath}/${src}`), cleanPathFormat(`${rootPath}/${dest}`));
+    const destTransformed = cleanPathFormat(`${rootPath}/${dest}/${getFileNameFromPath(src)}`);
+
     try {
-        moveSync(cleanPathFormat(`${rootPath}/${src}`), cleanPathFormat(`${rootPath}/${dest}`));
+        moveSync(cleanPathFormat(`${rootPath}/${src}`), destTransformed, {
+            overwrite: true,
+        });
 
         return true;
     } catch (error) {

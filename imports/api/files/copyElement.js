@@ -1,7 +1,7 @@
 import { Meteor } from 'meteor/meteor';
 import { copySync } from 'fs-extra';
 
-import { PWD } from '../utils';
+import { PWD, cleanPathFormat, getFileNameFromPath } from '../utils';
 
 const rootPath = Meteor.isDevelopment
     ? `${PWD}tmp`
@@ -9,7 +9,13 @@ const rootPath = Meteor.isDevelopment
 
 const copyElement = ({ src, dest }) => {
     try {
-        copySync(`${rootPath}/${src}`, `${rootPath}/${dest}`);
+        const parsedFrom = cleanPathFormat(`${rootPath}/${src}`);
+        const parseDest = cleanPathFormat(`${rootPath}/${dest}/${getFileNameFromPath(src)}`);
+
+        copySync(parsedFrom, parseDest, {
+            overwrite: true,
+            recursive: true,
+        });
 
         return true;
     } catch (error) {
