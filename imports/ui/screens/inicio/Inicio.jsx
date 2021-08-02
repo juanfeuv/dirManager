@@ -20,11 +20,12 @@ import Tooltip from 'react-bootstrap/Tooltip';
 
 import {
   readFiles, createFile, removeFile, createDirectory, removeDirectory, renameElement, copyElement as copyElementAny,
-  moveElement as moveElementAny,
+  moveElement as moveElementAny, readPermissions,
 } from './inicioHelper';
 
 import CustomBreadcrumb from './CustomBreadcrumb';
 import ModalConfirmacion from './ModalConfirmacion';
+import PermissionsModal from './PermissionsModal';
 
 const validatePath = (path) => `${path}${path && path[path.length - 1] !== '/'
   ? '/'
@@ -41,6 +42,8 @@ const Inicio = ({ location }) => {
   const [currentOriginalNameToEdit, setCurrentOriginalNameToEdit] = useState('');
   const [smShow, setSmShow] = useState(false);
   const [currentPathOp, setCurrentPathOp] = useState('');
+  const [currentPermissions, setCurrentPermissions] = useState({});
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
 
   const handleClose = () => setShow(false);
   const handleShow = ({ path, isFile }) => {
@@ -62,6 +65,18 @@ const Inicio = ({ location }) => {
       console.error(error);
 
       return [];
+    }
+  };
+
+  const getPermissions = async ({ path }) => {
+    try {
+      const permisos = await readPermissions({
+        path,
+      });
+
+      setCurrentPermissions(permisos);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -184,6 +199,13 @@ const Inicio = ({ location }) => {
     setSmShow(false);
   };
 
+  const showPermissions = async () => {
+    setShowPermissionsModal(true);
+    setSmShow(false);
+
+    getPermissions({ path: currentPathOp });
+  };
+
   const setModalOptions = ({ path }) => {
     setSmShow(true);
 
@@ -291,6 +313,13 @@ const Inicio = ({ location }) => {
         pathToRemove={pathToRemove}
         isFileToRemove={isFileToRemove}
       />
+      <PermissionsModal
+        currentPermissions={currentPermissions}
+        smShow={showPermissionsModal}
+        setSmShow={setShowPermissionsModal}
+        getPermissions={getPermissions}
+        currentPathOp={currentPathOp}
+      />
       <Modal
         size="sm"
         show={smShow}
@@ -317,6 +346,14 @@ const Inicio = ({ location }) => {
             onClick={moveElement}
           >
             Mover
+          </Button>
+          {' '}
+          <Button
+            variant="success"
+            size="sm"
+            onClick={showPermissions}
+          >
+            Permisos
           </Button>
         </Modal.Body>
       </Modal>

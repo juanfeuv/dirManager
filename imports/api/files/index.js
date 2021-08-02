@@ -3,6 +3,8 @@ import './createDirectory';
 import './createFile';
 import './moveElement';
 import './readFiles';
+import './readPermissions';
 import './removeDirectory';
 import './removeFile';
 import './renameElement';
+import './setPermission';

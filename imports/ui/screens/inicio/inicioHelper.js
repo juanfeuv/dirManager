@@ -87,3 +87,25 @@ export const moveElement = ({ src, dest }) => new Promise((resolve, reject) => M
 
         resolve(res);
     }));
+
+export const readPermissions = ({ path }) => new Promise((resolve, reject) => Meteor
+    .call('readPermissions', { path }, (err, res) => {
+        if (err) {
+            reject(err);
+
+            return;
+        }
+
+        resolve(res);
+    }));
+
+export const setPermission = ({ path, permission }) => new Promise((resolve, reject) => Meteor
+    .call('setPermission', { path, permission }, (err, res) => {
+        if (err) {
+            reject(err);
+
+            return;
+        }
+
+        resolve(res);
+    }));    
